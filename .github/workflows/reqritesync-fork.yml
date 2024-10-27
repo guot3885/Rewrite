@@ -16,7 +16,7 @@ jobs:
         uses: actions/checkout@v3
         with:
           fetch-depth: 0
-          ref: main  # 明确指定检出 main 分支
+          ref: refs/heads/main  # 明确指定完整的分支引用
       
       # 配置 Git
       - name: Configure Git
@@ -33,17 +33,24 @@ jobs:
       # 同步上游仓库的变更
       - name: Sync with Upstream
         run: |
-          # 获取所有分支信息
+          # 删除可能存在的陈旧引用
+          git remote prune origin
+          git remote prune upstream
+          
+          # 获取最新的分支信息
           git fetch upstream
           git fetch origin
           
-          # 确保我们在正确的分支上
-          git checkout -B main origin/main
+          # 确保我们在本地 main 分支上
+          git switch -c temp-main || git switch temp-main
+          
+          # 重置到 origin/main
+          git reset --hard origin/main
           
           # 合并上游的更改
-          git merge upstream/main --no-edit
+          git merge upstream/main --allow-unrelated-histories -X theirs --no-edit
           
           # 推送更改到 fork 仓库
-          git push origin main
+          git push origin HEAD:main --force
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
