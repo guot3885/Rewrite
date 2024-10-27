@@ -1,11 +1,9 @@
 name: Sync Fork with Upstream
 
 on:
-  # 每天北京时间凌晨 3 点运行
   schedule:
     - cron: '0 19 * * *'  # UTC 时间 19:00 (北京时间 +8)
   
-  # 允许手动触发同步
   workflow_dispatch:
 
 jobs:
@@ -18,23 +16,34 @@ jobs:
         uses: actions/checkout@v3
         with:
           fetch-depth: 0
+          ref: main  # 明确指定检出 main 分支
       
-      # 添加上游仓库地址
+      # 配置 Git
+      - name: Configure Git
+        run: |
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git config --global user.name "github-actions[bot]"
+      
+      # 添加上游仓库
       - name: Add Remote Upstream
         run: |
           git remote add upstream https://github.com/chxm1023/Rewrite.git
           git remote -v
       
-      # 获取上游仓库更新
-      - name: Fetch Upstream
+      # 同步上游仓库的变更
+      - name: Sync with Upstream
         run: |
+          # 获取所有分支信息
           git fetch upstream
-      
-      # 合并上游仓库的更新
-      - name: Merge Upstream
-        run: |
-          git checkout main
-          git merge upstream/main
+          git fetch origin
+          
+          # 确保我们在正确的分支上
+          git checkout -B main origin/main
+          
+          # 合并上游的更改
+          git merge upstream/main --no-edit
+          
+          # 推送更改到 fork 仓库
           git push origin main
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
