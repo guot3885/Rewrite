@@ -1,7 +1,7 @@
 /*************************************
 
 项目名称：Revenuecat系列解锁合集
-更新日期：2026-08-13
+更新日期：2026-08-14
 脚本作者：@ddm1023
 电报频道：https://t.me/ddm1023
 使用声明：⚠️仅供参考，🈲转载与售卖！
@@ -24,7 +24,7 @@ const headers = $request.headers, ua = headers['User-Agent'] || headers['user-ag
 
 const forbiddenApps = [ 'PicSeedClient', 'ReflixiOS', 'Pomodoro', 'MyHabit', 'Rond', 'Filebar', 'Fileball', 'APTV'];
 if (forbiddenApps.some(app => (ua && ua.includes(app)) || ($request.body && $request.body.includes(app)))) {
-  console.log("⛔️检测到禁止 MITM 的 APP，脚本停止运行！");
+  console.log("⛔️检测到禁止【MITM】的 APP，脚本停止运行！");
   $done({});
 }
 
@@ -63,6 +63,7 @@ const bundle = {
 };
 
 const listua = {
+  'OneTT': { name: 'CloneCam Pro', id: 'clonecam.lifetime', cm: 'sjc' },  //CloneCam-支持克隆的相机
   'ShowcasePro': { name: 'ShowcasePro.Ultra', id: 'DesignTech.SIA.ShowcasePro.Ultra.Lifetime', cm: 'sjc' },  //拼图软件-ShowcasePro
   'iOS/3001101': { name: 'doneitPremium', id: 'DesignTech.SIA.Doneit.Premium.Plan.Lifetime', cm: 'sjc' },  //看板-Doneit
   'Speedometer': { name: 'SpeedometerLite Pro', id: 'speedometerlite_lifetime', cm: 'sjb' },  //Speedometer-速度计简易版
@@ -435,17 +436,16 @@ const listua = {
 };
 
 // 检查是否存在有效订阅
-const entitlements = ddm.subscriber && ddm.subscriber.entitlements;
-if (entitlements && typeof entitlements === "object") {
+const subChk = ddm.subscriber && ddm.subscriber.entitlements;
+if (subChk && typeof subChk === "object") {
   const now = Date.now();
-  const subscribed = Object.values(entitlements).some(item => {
+  if (Object.values(subChk).some(item => {
     if (!item?.product_identifier) return false;
     if (item.expires_date == null) return true;
     const expires = Date.parse(item.expires_date);
     return Number.isFinite(expires) && expires > now;
-  });
-  if (subscribed) {
-    console.log("✅ 已存在有效订阅，已停止运行脚本");
+  })) {
+    console.log("✅ 检测已存在有效订阅，已停止运行脚本");
     $done({});
     return;
   }
